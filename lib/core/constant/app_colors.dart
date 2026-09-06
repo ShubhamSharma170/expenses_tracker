@@ -9,6 +9,7 @@ class AppColors {
   static const Color white = Colors.white;
   static const Color black = Colors.black;
 
+  static const Color red = Colors.red;
   // Hero Card Gradients
   static const Color cardGradientStart = Color(0xFF4A80F0);
   static const Color cardGradientEnd = Color(0xFF1FC8DB);

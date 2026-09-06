@@ -275,8 +275,8 @@ class _HomeScreenState extends State<HomeScreen> {
                             boxShadow: [
                               BoxShadow(
                                 color: AppColors.grey,
-                                spreadRadius: 2,
-                                blurRadius: 5,
+                                spreadRadius: 0,
+                                blurRadius: 10,
                                 offset: Offset(
                                   0,
                                   3,
@@ -326,15 +326,29 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ],
                               ),
                               Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
                                   item.type == TransactionType.expense
-                                      ? Text("- ₹${item.amount.toString()}")
-                                      : Text("+ ₹${item.amount.toString()}"),
+                                      ? Text(
+                                          "- ₹${item.amount.toString()}",
+                                          style: TextStyle(
+                                            color: AppColors.red,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 18,
+                                          ),
+                                        )
+                                      : Text(
+                                          "+ ₹${item.amount.toString()}",
+                                          style: TextStyle(
+                                            color: AppColors.incomeGreen,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 18,
+                                          ),
+                                        ),
                                   Text(
                                     DateFormat("dd MMM yy").format(item.date),
                                     style: TextStyle(
-                                      fontSize: 16,
+                                      fontSize: 14,
                                       color: AppColors.textGrey,
                                     ),
                                   ),
@@ -443,6 +457,27 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {},
+        shape: CircleBorder(),
+        backgroundColor: AppColors.cardGradientStart,
+        child: Icon(Icons.add, color: AppColors.white, size: 30),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
+        backgroundColor: AppColors.white,
+        selectedItemColor: AppColors.cardGradientStart,
+        unselectedItemColor: AppColors.textGrey,
+        showUnselectedLabels: false,
+        showSelectedLabels: false,
+        items: [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.bar_chart), label: 'Stats'),
+          BottomNavigationBarItem(icon: Icon(Icons.wallet), label: 'Wallet'),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+        ],
       ),
     );
   }
