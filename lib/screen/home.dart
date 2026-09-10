@@ -11,6 +11,16 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  String _selectedCategory = 'Food';
+
+  final List<Map<String, dynamic>> _categories = [
+    {'name': 'Food', 'icon': Icons.fastfood_rounded},
+    {'name': 'Clothes', 'icon': Icons.shopping_bag_rounded},
+    {'name': 'Transport', 'icon': Icons.directions_car_rounded},
+    {'name': 'Bills', 'icon': Icons.receipt_long_rounded},
+    {'name': 'Entertainment', 'icon': Icons.movie_rounded},
+    {'name': 'Others', 'icon': Icons.account_balance_wallet_rounded},
+  ];
   //  final List<Map<String, dynamic>>  _transactions = [
   //   {"title": "Grocery", "amount": 35200},
   //   {"title": "Travel", "amount": 524},
@@ -363,121 +373,258 @@ class _HomeScreenState extends State<HomeScreen> {
                   },
                 ),
               ),
-
-              // Text("Good Morning, Shubham", style: TextStyle(fontSize: 22)),
-              // SizedBox(height: 20),
-              // Text("Total Balance", style: TextStyle(fontSize: 20)),
-              // SizedBox(height: 10),
-              // Text(
-              //   "₹ ${totalBalance.toStringAsFixed(2)}",
-              //   style: TextStyle(fontSize: 20),
-              // ),
-              // SizedBox(height: 30),
-              // Row(
-              //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              //   children: [
-              //     Container(
-              //       padding: EdgeInsets.all(15),
-              //       decoration: BoxDecoration(
-              //         border: BoxBorder.all(color: Colors.black),
-              //       ),
-              //       child: Column(
-              //         children: [
-              //           Text("Income", style: TextStyle(fontSize: 20)),
-              //           SizedBox(height: 10),
-              //           Text(
-              //             "₹ ${totalIncome.toStringAsFixed(2)}",
-              //             style: TextStyle(fontSize: 20),
-              //           ),
-              //         ],
-              //       ),
-              //     ),
-              //     SizedBox(),
-              //     Container(
-              //       padding: EdgeInsets.all(15),
-              //       decoration: BoxDecoration(
-              //         border: BoxBorder.all(color: Colors.black),
-              //       ),
-              //       child: Column(
-              //         children: [
-              //           Text("Expenses", style: TextStyle(fontSize: 20)),
-              //           SizedBox(height: 10),
-              //           Text(
-              //             "₹ ${totalExpenses.toStringAsFixed(2)}",
-              //             style: TextStyle(fontSize: 20),
-              //           ),
-              //         ],
-              //       ),
-              //     ),
-              //   ],
-              // ),
-              // SizedBox(height: 30),
-              // Text("Recent Transactions", style: TextStyle(fontSize: 20)),
-              // SizedBox(height: 20),
-              // Expanded(
-              //   child: ListView.builder(
-              //     itemCount: transaction.length,
-              //     itemBuilder: (context, index) {
-              //       final item = transaction[index];
-              //       return Column(
-              //         crossAxisAlignment: CrossAxisAlignment.start,
-              //         children: [
-              //           Text(
-              //             item.category,
-              //             style: TextStyle(
-              //               fontSize: 22,
-              //               fontWeight: FontWeight.bold,
-              //             ),
-              //           ),
-              //           Row(
-              //             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              //             children: [
-              //               Text(item.title, style: TextStyle(fontSize: 20)),
-              //               item.type == TransactionType.expense
-              //                   ? Text(
-              //                       "- ₹${item.amount.toString()}",
-              //                       style: TextStyle(fontSize: 20),
-              //                     )
-              //                   : Text(
-              //                       "+ ₹${item.amount.toString()}",
-              //                       style: TextStyle(fontSize: 20),
-              //                     ),
-              //             ],
-              //           ),
-              //           Text(
-              //             DateFormat("dd MMM yyyy").format(item.date),
-              //             style: TextStyle(fontSize: 18),
-              //           ),
-              //           SizedBox(height: 10),
-              //         ],
-              //       );
-              //     },
-              //   ),
-              // ),
             ],
           ),
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {},
+        onPressed: () {
+          showModalBottomSheet(
+            context: context,
+            isScrollControlled: true,
+            backgroundColor: Colors.transparent,
+            builder: (context) => _buildAddTransactionSheet(),
+          );
+        },
         shape: CircleBorder(),
         backgroundColor: AppColors.cardGradientStart,
         child: Icon(Icons.add, color: AppColors.white, size: 30),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: AppColors.white,
-        selectedItemColor: AppColors.cardGradientStart,
-        unselectedItemColor: AppColors.textGrey,
-        showUnselectedLabels: false,
-        showSelectedLabels: false,
-        items: [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.bar_chart), label: 'Stats'),
-          BottomNavigationBarItem(icon: Icon(Icons.wallet), label: 'Wallet'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
-        ],
+      bottomNavigationBar: BottomAppBar(
+        shape: CircularNotchedRectangle(),
+        notchMargin: 8,
+        color: AppColors.white,
+        elevation: 10,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            IconButton(
+              icon: Icon(Icons.home),
+              color: AppColors.cardGradientStart,
+              onPressed: () {},
+            ),
+            IconButton(
+              icon: Icon(Icons.bar_chart),
+              color: AppColors.textGrey,
+              onPressed: () {},
+            ),
+            SizedBox(width: 40), // Space for the floating action button
+            IconButton(
+              icon: Icon(Icons.wallet),
+              color: AppColors.textGrey,
+              onPressed: () {},
+            ),
+            IconButton(
+              icon: Icon(Icons.person),
+              color: AppColors.textGrey,
+              onPressed: () {},
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  TransactionType _selectedType = TransactionType.expense;
+  final TextEditingController _titleController = TextEditingController();
+  final TextEditingController _amountController = TextEditingController();
+
+  // function for add transaction sheet
+  addTransaction() {
+    var finalTitle = _titleController.text.trim();
+    var finalAmount = double.tryParse(_amountController.text.trim()) ?? 0.0;
+    if (finalTitle.isEmpty || finalAmount <= 0) {
+      return;
+    }
+    final newTx = TransactionModel(
+      title: finalTitle,
+      amount: finalAmount,
+      date: DateTime.now(),
+      type: _selectedType,
+      category: _selectedCategory,
+    );
+
+    setState(() {
+      transaction.insert(0, newTx);
+    });
+    _titleController.clear();
+    _amountController.clear();
+    Navigator.of(context).pop();
+    setState(() {});
+  }
+
+  Widget _buildAddTransactionSheet() {
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
+      child: SingleChildScrollView(
+        child: Container(
+          width: double.infinity,
+          padding: EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: AppColors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // 1. Drag Handle
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // 2. Heading Text
+              const Text(
+                "Add Transaction",
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 30),
+              // toggle buttons for income and expense
+              SizedBox(
+                // color: Colors.red,
+                width: MediaQuery.of(context).size.width * 0.6,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _selectedType = TransactionType.income;
+                        });
+                      },
+                      child: Container(
+                        padding: EdgeInsets.symmetric(
+                          vertical: 8,
+                          horizontal: 15,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.incomeGreen,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          "Income",
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: AppColors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 10),
+                    GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _selectedType = TransactionType.expense;
+                        });
+                      },
+                      child: Container(
+                        padding: EdgeInsets.symmetric(
+                          vertical: 8,
+                          horizontal: 15,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.red,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          "Expense",
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: AppColors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: 20),
+              Container(
+                decoration: BoxDecoration(
+                  color: AppColors.white,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AppColors.grey, width: 1),
+                ),
+                padding: EdgeInsets.all(15),
+                child: Column(
+                  children: [
+                    TextField(
+                      controller: _titleController,
+                      decoration: InputDecoration(labelText: "Title"),
+                    ),
+                    SizedBox(height: 10),
+                    TextField(
+                      controller: _amountController,
+                      decoration: InputDecoration(labelText: "Amount"),
+                      keyboardType: TextInputType.number,
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: 20),
+              DropdownButtonFormField(
+                value: _selectedCategory,
+                decoration: InputDecoration(
+                  labelText: "Category",
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide(color: AppColors.grey),
+                  ),
+                ),
+                icon: Icon(Icons.keyboard_arrow_down_rounded),
+                items: _categories.map((category) {
+                  return DropdownMenuItem<String>(
+                    value: category['name'],
+                    child: Row(
+                      children: [
+                        Icon(category['icon'], color: AppColors.textDark),
+                        SizedBox(width: 10),
+                        Text(category['name']),
+                      ],
+                    ),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  if (value != null) {
+                    setState(() {
+                      _selectedCategory = value;
+                    });
+                  }
+                },
+              ),
+              SizedBox(height: 20),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.cardGradientStart,
+                  elevation: 0,
+                  padding: EdgeInsets.symmetric(vertical: 15, horizontal: 30),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+                onPressed: () {
+                  addTransaction();
+                },
+                child: const Text(
+                  "Save Transaction",
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
