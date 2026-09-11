@@ -12,6 +12,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   String _selectedCategory = 'Food';
+  IconData? _selectedIcon = Icons.fastfood_rounded;
 
   final List<Map<String, dynamic>> _categories = [
     {'name': 'Food', 'icon': Icons.fastfood_rounded},
@@ -34,8 +35,10 @@ class _HomeScreenState extends State<HomeScreen> {
       date: DateTime.now(),
       type: TransactionType.expense,
       category: "Grocery",
+      icon: Icons.fastfood_rounded,
     ),
     TransactionModel(
+      icon: Icons.directions_car_rounded,
       title: "Uber",
       amount: 524,
       date: DateTime.now(),
@@ -43,6 +46,7 @@ class _HomeScreenState extends State<HomeScreen> {
       category: "Travel",
     ),
     TransactionModel(
+      icon: Icons.account_balance_wallet_rounded,
       title: "Salary",
       amount: 60000,
       date: DateTime.now(),
@@ -70,8 +74,11 @@ class _HomeScreenState extends State<HomeScreen> {
     return totalIncome - totalExpenses;
   }
 
+  //
+
   @override
   Widget build(BuildContext context) {
+    var mq = MediaQuery.of(context).size.width;
     return Scaffold(
       body: SafeArea(
         child: Container(
@@ -86,11 +93,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   Row(
                     children: [
                       CircleAvatar(
-                        radius: 30,
+                        radius: 27,
                         backgroundColor: AppColors.grey,
                         child: Icon(
                           Icons.person,
-                          size: 30,
+                          // size: 30,
                           color: Colors.black,
                         ),
                       ),
@@ -147,87 +154,111 @@ class _HomeScreenState extends State<HomeScreen> {
                       "Total Balance",
                       style: TextStyle(fontSize: 20, color: Colors.white),
                     ),
-                    SizedBox(height: 10),
-                    Text(
-                      "₹ ${totalBalance.toStringAsFixed(2)}",
-                      style: TextStyle(
-                        fontSize: 30,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                    // SizedBox(height: 10),
+                    Container(
+                      alignment: Alignment.center,
+                      width: double.infinity,
+                      child: Text(
+                        "₹${totalBalance.toStringAsFixed(2)}",
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                     SizedBox(height: 30),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Row(
-                          children: [
-                            CircleAvatar(
-                              radius: 16,
-                              backgroundColor: AppColors.background,
-                              child: Icon(
-                                Icons.arrow_upward,
-                                color: AppColors.incomeGreen,
-                                size: 30,
+                        Expanded(
+                          child: Row(
+                            children: [
+                              CircleAvatar(
+                                radius: 12,
+                                backgroundColor: AppColors.background,
+                                child: Icon(
+                                  Icons.arrow_upward,
+                                  color: AppColors.incomeGreen,
+                                  // size: 30,
+                                ),
                               ),
-                            ),
-                            SizedBox(width: 10),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  "Income",
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    color: Colors.white,
-                                  ),
+                              SizedBox(width: 10),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      "Income",
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    // SizedBox(height: 5),
+                                    SizedBox(
+                                      width: mq * 0.25,
+                                      child: Text(
+                                        "₹${totalIncome.toStringAsFixed(2)}",
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          fontSize: 17,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                SizedBox(height: 10),
-                                Text(
-                                  "₹ ${totalIncome.toStringAsFixed(2)}",
-                                  style: TextStyle(
-                                    fontSize: 20,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
+                              ),
+                            ],
+                          ),
                         ),
-                        Row(
-                          children: [
-                            CircleAvatar(
-                              radius: 16,
-                              backgroundColor: AppColors.background,
-                              child: Icon(
-                                Icons.arrow_downward,
-                                color: AppColors.expenseRed,
-                                size: 30,
+                        Expanded(
+                          child: Row(
+                            children: [
+                              CircleAvatar(
+                                radius: 12,
+                                backgroundColor: AppColors.background,
+                                child: Icon(
+                                  Icons.arrow_downward,
+                                  color: AppColors.expenseRed,
+                                  // size: 30,
+                                ),
                               ),
-                            ),
-                            SizedBox(width: 10),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                              SizedBox(width: 10),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
 
-                              children: [
-                                Text(
-                                  "Expenses",
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    color: Colors.white,
-                                  ),
+                                  children: [
+                                    Text(
+                                      "Expenses",
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    // SizedBox(height: 10),
+                                    SizedBox(
+                                      width: mq * 0.25,
+                                      child: Text(
+                                        "₹${totalExpenses.toStringAsFixed(2)}",
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          fontSize: 17,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                SizedBox(height: 10),
-                                Text(
-                                  "₹ ${totalExpenses.toStringAsFixed(2)}",
-                                  style: TextStyle(
-                                    fontSize: 20,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
@@ -235,7 +266,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
 
-              SizedBox(height: 30),
+              SizedBox(height: 25),
               // Transaction List
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -259,7 +290,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     onPressed: () {},
                     icon: Icon(
                       Icons.filter_alt_rounded,
-                      size: 30,
+                      size: 25,
                       color: AppColors.textDark,
                     ),
                   ),
@@ -276,8 +307,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       children: [
                         Container(
                           padding: EdgeInsets.symmetric(
-                            vertical: 20,
-                            horizontal: 15,
+                            vertical: 12,
+                            horizontal: 10,
                           ),
                           decoration: BoxDecoration(
                             color: AppColors.white,
@@ -285,11 +316,11 @@ class _HomeScreenState extends State<HomeScreen> {
                             boxShadow: [
                               BoxShadow(
                                 color: AppColors.grey,
-                                spreadRadius: 0,
-                                blurRadius: 10,
+                                spreadRadius: -0,
+                                blurRadius: 1,
                                 offset: Offset(
                                   0,
-                                  3,
+                                  1,
                                 ), // changes position of shadow
                               ),
                             ],
@@ -297,72 +328,76 @@ class _HomeScreenState extends State<HomeScreen> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Row(
-                                children: [
-                                  Container(
-                                    decoration: BoxDecoration(
-                                      color: AppColors.background,
-                                      border: Border.all(color: AppColors.grey),
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    child: Icon(
-                                      Icons.account_balance_wallet,
-                                      size: 60,
-                                      color: AppColors.textDark,
-                                    ),
-                                  ),
-                                  SizedBox(width: 20),
-                                  Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        item.category,
-                                        style: TextStyle(
-                                          fontSize: 20,
-                                          fontWeight: FontWeight.bold,
-                                          color: AppColors.textDark,
+                              Expanded(
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      decoration: BoxDecoration(
+                                        color: AppColors.background,
+                                        border: Border.all(
+                                          color: AppColors.grey,
                                         ),
+                                        borderRadius: BorderRadius.circular(10),
                                       ),
-                                      Text(
-                                        item.title,
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          color: AppColors.textGrey,
+                                      child: Icon(
+                                        item.icon,
+                                        size: 60,
+                                        color: AppColors.textDark,
+                                      ),
+                                    ),
+                                    SizedBox(width: 20),
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          item.category,
+                                          style: TextStyle(
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.bold,
+                                            color: AppColors.textDark,
+                                          ),
                                         ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
+                                        Text(
+                                          item.title,
+                                          style: TextStyle(
+                                            fontSize: 18,
+                                            color: AppColors.textGrey,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
                               ),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  item.type == TransactionType.expense
-                                      ? Text(
-                                          "- ₹${item.amount.toString()}",
-                                          style: TextStyle(
-                                            color: AppColors.red,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 18,
-                                          ),
-                                        )
-                                      : Text(
-                                          "+ ₹${item.amount.toString()}",
-                                          style: TextStyle(
-                                            color: AppColors.incomeGreen,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 18,
-                                          ),
-                                        ),
-                                  Text(
-                                    DateFormat("dd MMM yy").format(item.date),
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: AppColors.textGrey,
+                              Flexible(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Text(
+                                      item.type == TransactionType.expense
+                                          ? "- ₹${item.amount.toStringAsFixed(2)}"
+                                          : "+ ₹${item.amount.toStringAsFixed(2)}",
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                        color:
+                                            item.type == TransactionType.expense
+                                            ? AppColors.red
+                                            : AppColors.incomeGreen,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 18,
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                    Text(
+                                      DateFormat("dd MMM yy").format(item.date),
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: AppColors.textGrey,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ],
                           ),
@@ -443,6 +478,7 @@ class _HomeScreenState extends State<HomeScreen> {
       date: DateTime.now(),
       type: _selectedType,
       category: _selectedCategory,
+      icon: _selectedIcon,
     );
 
     setState(() {
@@ -455,6 +491,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildAddTransactionSheet() {
+    double mq = MediaQuery.of(context).size.width;
     return Padding(
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
@@ -490,7 +527,7 @@ class _HomeScreenState extends State<HomeScreen> {
               // toggle buttons for income and expense
               SizedBox(
                 // color: Colors.red,
-                width: MediaQuery.of(context).size.width * 0.6,
+                width: mq * 0.6,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -596,6 +633,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   if (value != null) {
                     setState(() {
                       _selectedCategory = value;
+                      _selectedIcon = _categories.firstWhere(
+                        (category) => category['name'] == value,
+                      )['icon'];
                     });
                   }
                 },
