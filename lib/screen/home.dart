@@ -1,7 +1,9 @@
 import 'package:exppence_tracker/core/constant/app_colors.dart';
 import 'package:exppence_tracker/models/transaction_model.dart';
+import 'package:exppence_tracker/provider/transaction_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -79,6 +81,9 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     var mq = MediaQuery.of(context).size.width;
+
+    final txProvider = context.watch<TransactionProvider>();
+    final transactions = txProvider.transactions;
     return Scaffold(
       body: SafeArea(
         child: Container(
@@ -159,7 +164,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       alignment: Alignment.center,
                       width: double.infinity,
                       child: Text(
-                        "₹${totalBalance.toStringAsFixed(2)}",
+                        "₹${txProvider.totalBalance.toStringAsFixed(2)}",
+                        // "₹${totalBalance.toStringAsFixed(2)}",
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
@@ -201,7 +207,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                     SizedBox(
                                       width: mq * 0.25,
                                       child: Text(
-                                        "₹${totalIncome.toStringAsFixed(2)}",
+                                        "₹${txProvider.totalIncome.toStringAsFixed(2)}",
+                                        // "₹${totalIncome.toStringAsFixed(2)}",
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                         style: TextStyle(
@@ -245,7 +252,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                     SizedBox(
                                       width: mq * 0.25,
                                       child: Text(
-                                        "₹${totalExpenses.toStringAsFixed(2)}",
+                                        "₹${txProvider.totalExpenses.toStringAsFixed(2)}",
+                                        // "₹${totalExpenses.toStringAsFixed(2)}",
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                         style: TextStyle(
@@ -300,9 +308,9 @@ class _HomeScreenState extends State<HomeScreen> {
               // Transaction List View
               Expanded(
                 child: ListView.builder(
-                  itemCount: transaction.length,
+                  itemCount: transactions.length,
                   itemBuilder: (context, index) {
-                    final item = transaction[index];
+                    final item = transactions[index];
                     return Column(
                       children: [
                         Container(
@@ -487,13 +495,14 @@ class _HomeScreenState extends State<HomeScreen> {
       icon: _selectedIcon,
     );
 
-    setState(() {
-      transaction.insert(0, newTx);
-    });
+
+    context.read<TransactionProvider>().addTransaction(newTx);
+    // setState(() {
+    //   transaction.insert(0, newTx);
+    // });
     _titleController.clear();
     _amountController.clear();
     Navigator.of(context).pop();
-    setState(() {});
   }
 
   Widget _buildAddTransactionSheet() {

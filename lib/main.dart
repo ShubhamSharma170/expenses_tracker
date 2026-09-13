@@ -1,8 +1,15 @@
+import 'package:exppence_tracker/provider/transaction_provider.dart';
 import 'package:exppence_tracker/screen/home.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => TransactionProvider(),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
