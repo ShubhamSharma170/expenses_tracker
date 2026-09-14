@@ -4,9 +4,10 @@ import 'package:flutter/material.dart';
 class TransactionProvider with ChangeNotifier {
   final List<TransactionModel> _transactions = [];
 
-  List<TransactionModel> get transactions => _transactions;
+  // getter method to get all transactions and return an unmodifiable list (to prevent external modifications )
+  List<TransactionModel> get transactions => List.unmodifiable(_transactions);
 
-   // getter methods for getting total income
+  // getter methods for getting total income
   double get totalIncome {
     return transactions
         .where((items) => items.type == TransactionType.income)
@@ -28,7 +29,6 @@ class TransactionProvider with ChangeNotifier {
   // method to add a transaction
   void addTransaction(TransactionModel tx) {
     _transactions.insert(0, tx);
-    notifyListeners(); 
+    notifyListeners();
   }
-
 }
