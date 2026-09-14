@@ -31,4 +31,16 @@ class TransactionProvider with ChangeNotifier {
     _transactions.insert(0, tx);
     notifyListeners();
   }
+
+  // method to delete a transaction
+  void deleteTransaction(int index) {
+    _transactions.removeAt(index);
+    notifyListeners();
+  }
+
+  // method for inserting a transaction
+  void insertTransaction(int index, TransactionModel tx) {
+    _transactions.insert(index, tx);
+    notifyListeners();
+  }
 }

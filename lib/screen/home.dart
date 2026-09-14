@@ -30,51 +30,51 @@ class _HomeScreenState extends State<HomeScreen> {
   //   {"title": "Salary", "amount": 60000},
   // ];
 
-  final transaction = [
-    TransactionModel(
-      title: "Food",
-      amount: 250,
-      date: DateTime.now(),
-      type: TransactionType.expense,
-      category: "Grocery",
-      icon: Icons.fastfood_rounded,
-    ),
-    TransactionModel(
-      icon: Icons.directions_car_rounded,
-      title: "Uber",
-      amount: 524,
-      date: DateTime.now(),
-      type: TransactionType.expense,
-      category: "Travel",
-    ),
-    TransactionModel(
-      icon: Icons.account_balance_wallet_rounded,
-      title: "Salary",
-      amount: 60000,
-      date: DateTime.now(),
-      type: TransactionType.income,
-      category: "Salary",
-    ),
-  ];
+  // final transaction = [
+  //   TransactionModel(
+  //     title: "Food",
+  //     amount: 250,
+  //     date: DateTime.now(),
+  //     type: TransactionType.expense,
+  //     category: "Grocery",
+  //     icon: Icons.fastfood_rounded,
+  //   ),
+  //   TransactionModel(
+  //     icon: Icons.directions_car_rounded,
+  //     title: "Uber",
+  //     amount: 524,
+  //     date: DateTime.now(),
+  //     type: TransactionType.expense,
+  //     category: "Travel",
+  //   ),
+  //   TransactionModel(
+  //     icon: Icons.account_balance_wallet_rounded,
+  //     title: "Salary",
+  //     amount: 60000,
+  //     date: DateTime.now(),
+  //     type: TransactionType.income,
+  //     category: "Salary",
+  //   ),
+  // ];
 
   // getter methods for getting total income
-  double get totalIncome {
-    return transaction
-        .where((items) => items.type == TransactionType.income)
-        .fold(0.0, (previousValue, item) => previousValue + item.amount);
-  }
+  // double get totalIncome {
+  //   return transaction
+  //       .where((items) => items.type == TransactionType.income)
+  //       .fold(0.0, (previousValue, item) => previousValue + item.amount);
+  // }
 
-  // getter methods for getting total expenses
-  double get totalExpenses {
-    return transaction
-        .where((items) => items.type == TransactionType.expense)
-        .fold(0.0, (previousValue, item) => previousValue + item.amount);
-  }
+  // // getter methods for getting total expenses
+  // double get totalExpenses {
+  //   return transaction
+  //       .where((items) => items.type == TransactionType.expense)
+  //       .fold(0.0, (previousValue, item) => previousValue + item.amount);
+  // }
 
-  // getter methods for getting total balance
-  double get totalBalance {
-    return totalIncome - totalExpenses;
-  }
+  // // getter methods for getting total balance
+  // double get totalBalance {
+  //   return totalIncome - totalExpenses;
+  // }
 
   //
 
@@ -313,107 +313,156 @@ class _HomeScreenState extends State<HomeScreen> {
                     final item = transactions[index];
                     return Column(
                       children: [
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                            vertical: 12,
-                            horizontal: 10,
+                        Dismissible(
+                          key: Key(item.date.toString()),
+                          background: Container(
+                            alignment: Alignment.centerRight,
+                            decoration: BoxDecoration(
+                              color: AppColors.red,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            padding: EdgeInsets.only(right: 20),
+                            child: Icon(
+                              Icons.delete_outline_outlined,
+                              color: AppColors.white,
+                            ),
                           ),
-                          decoration: BoxDecoration(
-                            color: AppColors.white,
-                            borderRadius: BorderRadius.circular(10),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppColors.grey,
-                                spreadRadius: -0,
-                                blurRadius: 1,
-                                offset: Offset(
-                                  0,
-                                  1,
-                                ), // changes position of shadow
+                          direction: DismissDirection.endToStart,
+                          onDismissed: (direction) {
+                            final deletedItem = transactions[index];
+                            final deletedIndex = index;
+                            context
+                                .read<TransactionProvider>()
+                                .deleteTransaction(index);
+                            ScaffoldMessenger.of(context).clearSnackBars();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  "${item.title} deleted",
+                                  style: TextStyle(color: AppColors.white),
+                                ),
+                                duration: Duration(seconds: 4),
+                                action: SnackBarAction(
+                                  label: "Undo",
+                                  onPressed: () {
+                                    context
+                                        .read<TransactionProvider>()
+                                        .insertTransaction(
+                                          deletedIndex,
+                                          deletedItem,
+                                        );
+                                  },
+                                ),
                               ),
-                            ],
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Expanded(
-                                child: Row(
-                                  children: [
-                                    Container(
-                                      decoration: BoxDecoration(
-                                        color: AppColors.background,
-                                        border: Border.all(
-                                          color: AppColors.grey,
+                            );
+                          },
+                          child: Container(
+                            padding: EdgeInsets.symmetric(
+                              vertical: 12,
+                              horizontal: 10,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.white,
+                              borderRadius: BorderRadius.circular(10),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.grey,
+                                  spreadRadius: -0,
+                                  blurRadius: 1,
+                                  offset: Offset(
+                                    0,
+                                    1,
+                                  ), // changes position of shadow
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        decoration: BoxDecoration(
+                                          color: AppColors.background,
+                                          border: Border.all(
+                                            color: AppColors.grey,
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            10,
+                                          ),
                                         ),
-                                        borderRadius: BorderRadius.circular(10),
+                                        child: Icon(
+                                          item.icon,
+                                          size: 60,
+                                          color: AppColors.textDark,
+                                        ),
                                       ),
-                                      child: Icon(
-                                        item.icon,
-                                        size: 60,
-                                        color: AppColors.textDark,
-                                      ),
-                                    ),
-                                    SizedBox(width: 20),
-                                    Flexible(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            item.category,
-                                            maxLines: 1,
-                                            // overflow: TextOverflow.ellipsis,
-                                            style: TextStyle(
-                                              fontSize: 20,
-                                              fontWeight: FontWeight.bold,
-                                              color: AppColors.textDark,
+                                      SizedBox(width: 20),
+                                      Flexible(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              item.category,
+                                              maxLines: 1,
+                                              // overflow: TextOverflow.ellipsis,
+                                              style: TextStyle(
+                                                fontSize: 20,
+                                                fontWeight: FontWeight.bold,
+                                                color: AppColors.textDark,
+                                              ),
                                             ),
-                                          ),
-                                          Text(
-                                            item.title,
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: TextStyle(
-                                              fontSize: 18,
-                                              color: AppColors.textGrey,
+                                            Text(
+                                              item.title,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: TextStyle(
+                                                fontSize: 18,
+                                                color: AppColors.textGrey,
+                                              ),
                                             ),
-                                          ),
-                                        ],
+                                          ],
+                                        ),
                                       ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
-                              ),
-                              Flexible(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    Text(
-                                      item.type == TransactionType.expense
-                                          ? "- ₹${item.amount.toStringAsFixed(2)}"
-                                          : "+ ₹${item.amount.toStringAsFixed(2)}",
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(
-                                        color:
-                                            item.type == TransactionType.expense
-                                            ? AppColors.red
-                                            : AppColors.incomeGreen,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 18,
+                                Flexible(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      Text(
+                                        item.type == TransactionType.expense
+                                            ? "- ₹${item.amount.toStringAsFixed(2)}"
+                                            : "+ ₹${item.amount.toStringAsFixed(2)}",
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          color:
+                                              item.type ==
+                                                  TransactionType.expense
+                                              ? AppColors.red
+                                              : AppColors.incomeGreen,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 18,
+                                        ),
                                       ),
-                                    ),
-                                    Text(
-                                      DateFormat("dd MMM yy").format(item.date),
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        color: AppColors.textGrey,
+                                      Text(
+                                        DateFormat(
+                                          "dd MMM yy",
+                                        ).format(item.date),
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: AppColors.textGrey,
+                                        ),
                                       ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
                         SizedBox(height: 20),
@@ -494,7 +543,6 @@ class _HomeScreenState extends State<HomeScreen> {
       category: _selectedCategory,
       icon: _selectedIcon,
     );
-
 
     context.read<TransactionProvider>().addTransaction(newTx);
     // setState(() {
