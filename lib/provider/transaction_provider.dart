@@ -1,8 +1,18 @@
+import 'dart:async';
+
 import 'package:exppence_tracker/models/transaction_model.dart';
+import 'package:exppence_tracker/services/firebase_services.dart';
 import 'package:flutter/material.dart';
 
 class TransactionProvider with ChangeNotifier {
-  final List<TransactionModel> _transactions = [];
+  // constructor of transaction provider
+  TransactionProvider() {
+    listenToTransactions();
+  }
+
+  // constructor of firebase services
+  FirestoreServices firestoreServices = FirestoreServices();
+  List<TransactionModel> _transactions = [];
 
   // getter method to get all transactions and return an unmodifiable list (to prevent external modifications )
   List<TransactionModel> get transactions => List.unmodifiable(_transactions);
@@ -42,5 +52,30 @@ class TransactionProvider with ChangeNotifier {
   void insertTransaction(int index, TransactionModel tx) {
     _transactions.insert(index, tx);
     notifyListeners();
+  }
+
+  // method for add transaction in firebase
+  Future<void> addTransactionToFirebase(TransactionModel transaction) async {
+    await firestoreServices.addTransaction(transaction);
+  }
+
+  // Stream subscription to listen for changes in the transactions collection
+  StreamSubscription<List<TransactionModel>>? _transactionSubscription;
+
+  // method to start listening for changes in the transactions collection
+  void listenToTransactions() {
+    _transactionSubscription = firestoreServices.getTransactions().listen((
+      updatedList,
+    ) {
+      _transactions = updatedList;
+      notifyListeners();
+    });
+  }
+
+  // dispose
+  @override
+  void dispose() {
+    _transactionSubscription?.cancel();
+    super.dispose();
   }
 }

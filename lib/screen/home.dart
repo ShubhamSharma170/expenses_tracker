@@ -1,6 +1,7 @@
 import 'package:exppence_tracker/core/constant/app_colors.dart';
 import 'package:exppence_tracker/models/transaction_model.dart';
 import 'package:exppence_tracker/provider/transaction_provider.dart';
+import 'package:exppence_tracker/utils/transaction_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -305,6 +306,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
               SizedBox(height: 20),
+              
               // Transaction List View
               Expanded(
                 child: ListView.builder(
@@ -529,28 +531,44 @@ class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _amountController = TextEditingController();
 
   // function for add transaction sheet
-  addTransaction() {
-    var finalTitle = _titleController.text.trim();
-    var finalAmount = double.tryParse(_amountController.text.trim()) ?? 0.0;
-    if (finalTitle.isEmpty || finalAmount <= 0) {
-      return;
-    }
-    final newTx = TransactionModel(
-      title: finalTitle,
-      amount: finalAmount,
-      date: DateTime.now(),
+  // addTransaction() {
+  //   var finalTitle = _titleController.text.trim();
+  //   var finalAmount = double.tryParse(_amountController.text.trim()) ?? 0.0;
+  //   if (finalTitle.isEmpty || finalAmount <= 0) {
+  //     return;
+  //   }
+  //   final newTx = TransactionModel(
+  //     id: "",
+  //     title: finalTitle,
+  //     amount: finalAmount,
+  //     date: DateTime.now(),
+  //     type: _selectedType,
+  //     category: _selectedCategory,
+  //     icon: _selectedIcon,
+  //   );
+
+  //   context.read<TransactionProvider>().addTransactionToFirebase(newTx);
+  //   // context.read<TransactionProvider>().addTransaction(newTx);
+
+  //   _titleController.clear();
+  //   _amountController.clear();
+  //   Navigator.of(context).pop();
+  // }
+
+  void addTransaction() {
+    TransactionHelper.submitTransaction(
+      context: context,
+      title: _titleController.text.trim(),
+      amount: double.tryParse(_amountController.text.trim()) ?? 0.0,
       type: _selectedType,
       category: _selectedCategory,
       icon: _selectedIcon,
+      onSuccess: () {
+        _titleController.clear();
+        _amountController.clear();
+        // Navigator.of(context).pop();
+      },
     );
-
-    context.read<TransactionProvider>().addTransaction(newTx);
-    // setState(() {
-    //   transaction.insert(0, newTx);
-    // });
-    _titleController.clear();
-    _amountController.clear();
-    Navigator.of(context).pop();
   }
 
   Widget _buildAddTransactionSheet() {
