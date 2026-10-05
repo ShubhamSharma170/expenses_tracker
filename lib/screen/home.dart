@@ -25,60 +25,6 @@ class _HomeScreenState extends State<HomeScreen> {
     {'name': 'Entertainment', 'icon': Icons.movie_rounded},
     {'name': 'Others', 'icon': Icons.account_balance_wallet_rounded},
   ];
-  //  final List<Map<String, dynamic>>  _transactions = [
-  //   {"title": "Grocery", "amount": 35200},
-  //   {"title": "Travel", "amount": 524},
-  //   {"title": "Salary", "amount": 60000},
-  // ];
-
-  // final transaction = [
-  //   TransactionModel(
-  //     title: "Food",
-  //     amount: 250,
-  //     date: DateTime.now(),
-  //     type: TransactionType.expense,
-  //     category: "Grocery",
-  //     icon: Icons.fastfood_rounded,
-  //   ),
-  //   TransactionModel(
-  //     icon: Icons.directions_car_rounded,
-  //     title: "Uber",
-  //     amount: 524,
-  //     date: DateTime.now(),
-  //     type: TransactionType.expense,
-  //     category: "Travel",
-  //   ),
-  //   TransactionModel(
-  //     icon: Icons.account_balance_wallet_rounded,
-  //     title: "Salary",
-  //     amount: 60000,
-  //     date: DateTime.now(),
-  //     type: TransactionType.income,
-  //     category: "Salary",
-  //   ),
-  // ];
-
-  // getter methods for getting total income
-  // double get totalIncome {
-  //   return transaction
-  //       .where((items) => items.type == TransactionType.income)
-  //       .fold(0.0, (previousValue, item) => previousValue + item.amount);
-  // }
-
-  // // getter methods for getting total expenses
-  // double get totalExpenses {
-  //   return transaction
-  //       .where((items) => items.type == TransactionType.expense)
-  //       .fold(0.0, (previousValue, item) => previousValue + item.amount);
-  // }
-
-  // // getter methods for getting total balance
-  // double get totalBalance {
-  //   return totalIncome - totalExpenses;
-  // }
-
-  //
-
   @override
   Widget build(BuildContext context) {
     var mq = MediaQuery.of(context).size.width;
