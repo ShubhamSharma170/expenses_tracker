@@ -33,7 +33,6 @@ class TransactionHelper {
       amount: finalAmount,
       type: type,
       category: category,
-      icon: icon,
       date: DateTime.now(),
     );
 

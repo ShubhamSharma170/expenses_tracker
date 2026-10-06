@@ -1,4 +1,5 @@
 import 'package:exppence_tracker/core/constant/app_colors.dart';
+import 'package:exppence_tracker/helper/category_helper.dart';
 import 'package:exppence_tracker/models/transaction_model.dart';
 import 'package:exppence_tracker/provider/transaction_provider.dart';
 import 'package:exppence_tracker/utils/transaction_helper.dart';
@@ -17,14 +18,6 @@ class _HomeScreenState extends State<HomeScreen> {
   String _selectedCategory = 'Food';
   IconData? _selectedIcon = Icons.fastfood_rounded;
 
-  final List<Map<String, dynamic>> _categories = [
-    {'name': 'Food', 'icon': Icons.fastfood_rounded},
-    {'name': 'Clothes', 'icon': Icons.shopping_bag_rounded},
-    {'name': 'Transport', 'icon': Icons.directions_car_rounded},
-    {'name': 'Bills', 'icon': Icons.receipt_long_rounded},
-    {'name': 'Entertainment', 'icon': Icons.movie_rounded},
-    {'name': 'Others', 'icon': Icons.account_balance_wallet_rounded},
-  ];
   @override
   Widget build(BuildContext context) {
     var mq = MediaQuery.of(context).size.width;
@@ -252,7 +245,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
               SizedBox(height: 20),
-              
+
               // Transaction List View
               Expanded(
                 child: ListView.builder(
@@ -340,10 +333,15 @@ class _HomeScreenState extends State<HomeScreen> {
                                             10,
                                           ),
                                         ),
-                                        child: Icon(
-                                          item.icon,
-                                          size: 60,
-                                          color: AppColors.textDark,
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(8.0),
+                                          child: Icon(
+                                            CategoryHelper.getIcon(
+                                              item.category,
+                                            ),
+                                            size: 30,
+                                            color: AppColors.textDark,
+                                          ),
                                         ),
                                       ),
                                       SizedBox(width: 20),
@@ -475,31 +473,6 @@ class _HomeScreenState extends State<HomeScreen> {
   TransactionType _selectedType = TransactionType.expense;
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _amountController = TextEditingController();
-
-  // function for add transaction sheet
-  // addTransaction() {
-  //   var finalTitle = _titleController.text.trim();
-  //   var finalAmount = double.tryParse(_amountController.text.trim()) ?? 0.0;
-  //   if (finalTitle.isEmpty || finalAmount <= 0) {
-  //     return;
-  //   }
-  //   final newTx = TransactionModel(
-  //     id: "",
-  //     title: finalTitle,
-  //     amount: finalAmount,
-  //     date: DateTime.now(),
-  //     type: _selectedType,
-  //     category: _selectedCategory,
-  //     icon: _selectedIcon,
-  //   );
-
-  //   context.read<TransactionProvider>().addTransactionToFirebase(newTx);
-  //   // context.read<TransactionProvider>().addTransaction(newTx);
-
-  //   _titleController.clear();
-  //   _amountController.clear();
-  //   Navigator.of(context).pop();
-  // }
 
   void addTransaction() {
     TransactionHelper.submitTransaction(
@@ -644,14 +617,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 icon: Icon(Icons.keyboard_arrow_down_rounded),
-                items: _categories.map((category) {
+                items: CategoryHelper.categories.map((category) {
                   return DropdownMenuItem<String>(
-                    value: category['name'],
+                    value: category.name,
                     child: Row(
                       children: [
-                        Icon(category['icon'], color: AppColors.textDark),
+                        Icon(category.icon, color: AppColors.textDark),
                         SizedBox(width: 10),
-                        Text(category['name']),
+                        Text(category.name),
                       ],
                     ),
                   );
@@ -660,9 +633,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   if (value != null) {
                     setState(() {
                       _selectedCategory = value;
-                      _selectedIcon = _categories.firstWhere(
-                        (category) => category['name'] == value,
-                      )['icon'];
+                      _selectedIcon = CategoryHelper.getIcon(value);
                     });
                   }
                 },
