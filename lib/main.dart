@@ -1,6 +1,6 @@
 import 'package:exppence_tracker/firebase_options.dart';
 import 'package:exppence_tracker/provider/transaction_provider.dart';
-import 'package:exppence_tracker/screen/home.dart';
+import 'package:exppence_tracker/screen/auth/login_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -23,11 +23,12 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'Flutter Demo',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const HomeScreen(),
+      home: const LoginScreen(),
     );
   }
 }
