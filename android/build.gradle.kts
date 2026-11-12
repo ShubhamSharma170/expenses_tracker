@@ -27,14 +27,14 @@ allprojects {
     }
 }
 
-subprojects {
-    tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
-        incremental = false
-        compilerOptions {
-            freeCompilerArgs.add("-Xskip-metadata-version-check")
-        }
-    }
-}
+// subprojects {
+//     tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+//         incremental = false
+//         compilerOptions {
+//             freeCompilerArgs.add("-Xskip-metadata-version-check")
+//         }
+//     }
+// }
 
 val newBuildDir: Directory = rootProject.layout.buildDirectory.dir("../../build").get()
 rootProject.layout.buildDirectory.value(newBuildDir)
