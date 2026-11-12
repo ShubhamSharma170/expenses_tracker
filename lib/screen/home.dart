@@ -2,6 +2,7 @@ import 'package:exppence_tracker/core/constant/app_colors.dart';
 import 'package:exppence_tracker/helper/category_helper.dart';
 import 'package:exppence_tracker/models/transaction_model.dart';
 import 'package:exppence_tracker/provider/transaction_provider.dart';
+import 'package:exppence_tracker/services/auth_service.dart';
 import 'package:exppence_tracker/utils/transaction_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -69,7 +70,9 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                     ),
-                    onPressed: () {},
+                    onPressed: () async {
+                      await context.read<AuthClassProvider>().logout();
+                    },
                     icon: Icon(Icons.notifications_none_outlined, size: 25),
                   ),
                 ],
