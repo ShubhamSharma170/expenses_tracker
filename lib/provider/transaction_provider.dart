@@ -1,62 +1,74 @@
 import 'dart:async';
-
 import 'package:exppence_tracker/models/transaction_model.dart';
 import 'package:exppence_tracker/services/firebase_services.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class TransactionProvider with ChangeNotifier {
-  // constructor of transaction provider
+  final FirestoreServices _firestoreServices = FirestoreServices();
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  List<TransactionModel> _transactions = [];
+  StreamSubscription<List<TransactionModel>>? _transactionSubscription;
+  StreamSubscription<User?>? _authSubscription;
+
+  // Automatically react to user login and logout events
   TransactionProvider() {
-    listenToTransactions();
+    _authSubscription = _auth.authStateChanges().listen((User? user) {
+      if (user != null) {
+        listenToTransactions(user.uid);
+      } else {
+        // Clear previous user's data and stop listening on logout
+        _transactionSubscription?.cancel();
+        _transactions = [];
+        notifyListeners();
+      }
+    });
   }
 
-  // constructor of firebase services
-  FirestoreServices firestoreServices = FirestoreServices();
-  List<TransactionModel> _transactions = [];
-
-  // getter method to get all transactions and return an unmodifiable list (to prevent external modifications )
+  // Return an unmodifiable list to prevent accidental external mutations
   List<TransactionModel> get transactions => List.unmodifiable(_transactions);
 
-  // getter methods for getting total income
+  // Calculate total income from the current user's transactions
   double get totalIncome {
     return transactions
-        .where((items) => items.type == TransactionType.income)
+        .where((item) => item.type == TransactionType.income)
         .fold(0.0, (previousValue, item) => previousValue + item.amount);
   }
 
-  // getter methods for getting total expenses
+  // Calculate total expenses from the current user's transactions
   double get totalExpenses {
     return transactions
-        .where((items) => items.type == TransactionType.expense)
+        .where((item) => item.type == TransactionType.expense)
         .fold(0.0, (previousValue, item) => previousValue + item.amount);
   }
 
-  // getter methods for getting total balance
+  // Calculate net balance by subtracting total expenses from total income
   double get totalBalance {
     return totalIncome - totalExpenses;
   }
 
-  // method to add a transaction
-  void addTransaction(TransactionModel tx) {
-    _transactions.insert(0, tx);
-    notifyListeners();
+  // Save a new transaction under the currently signed-in user's UID
+  Future<void> addTransactionToFirebase(TransactionModel transaction) async {
+    final uid = _auth.currentUser?.uid;
+    if (uid == null) {
+      throw Exception('No authenticated user found.');
+    }
+    await _firestoreServices.addTransaction(uid, transaction);
   }
 
-  // method to delete a transaction
-  // void deleteTransaction(int index) {
-  //   _transactions.removeAt(index);
-  //   notifyListeners();
-  // }
-
-  // Remove a transaction from the local list immediately and delete it from Firestore
+  // Remove a transaction locally for instant feedback and delete from Firestore
   Future<void> deleteTransaction(int index) async {
+    final uid = _auth.currentUser?.uid;
+    if (uid == null) return;
+
     final removedTx = _transactions[index];
     _transactions.removeAt(index);
     notifyListeners();
 
     if (removedTx.id.isNotEmpty) {
       try {
-        await firestoreServices.deleteTransaction(removedTx.id);
+        await _firestoreServices.deleteTransaction(uid, removedTx.id);
       } catch (e) {
         // Restore the item locally if Firestore deletion fails
         _transactions.insert(index, removedTx);
@@ -65,34 +77,21 @@ class TransactionProvider with ChangeNotifier {
     }
   }
 
-  // method for inserting a transaction
-  void insertTransaction(int index, TransactionModel tx) {
-    _transactions.insert(index, tx);
-    notifyListeners();
-  }
-
-  // method for add transaction in firebase
-  Future<void> addTransactionToFirebase(TransactionModel transaction) async {
-    await firestoreServices.addTransaction(transaction);
-  }
-
-  // Stream subscription to listen for changes in the transactions collection
-  StreamSubscription<List<TransactionModel>>? _transactionSubscription;
-
-  // method to start listening for changes in the transactions collection
-  void listenToTransactions() {
-    _transactionSubscription = firestoreServices.getTransactions().listen((
-      updatedList,
-    ) {
+  // Subscribe to real-time transaction updates for the given user UID
+  void listenToTransactions(String uid) {
+    _transactionSubscription?.cancel();
+    _transactionSubscription =
+        _firestoreServices.getTransactions(uid).listen((updatedList) {
       _transactions = updatedList;
       notifyListeners();
     });
   }
 
-  // dispose
+  // Cancel all active stream subscriptions when the provider is disposed
   @override
   void dispose() {
     _transactionSubscription?.cancel();
+    _authSubscription?.cancel();
     super.dispose();
   }
 }
