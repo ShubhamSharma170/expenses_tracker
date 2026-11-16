@@ -43,9 +43,26 @@ class TransactionProvider with ChangeNotifier {
   }
 
   // method to delete a transaction
-  void deleteTransaction(int index) {
+  // void deleteTransaction(int index) {
+  //   _transactions.removeAt(index);
+  //   notifyListeners();
+  // }
+
+  // Remove a transaction from the local list immediately and delete it from Firestore
+  Future<void> deleteTransaction(int index) async {
+    final removedTx = _transactions[index];
     _transactions.removeAt(index);
     notifyListeners();
+
+    if (removedTx.id.isNotEmpty) {
+      try {
+        await firestoreServices.deleteTransaction(removedTx.id);
+      } catch (e) {
+        // Restore the item locally if Firestore deletion fails
+        _transactions.insert(index, removedTx);
+        notifyListeners();
+      }
+    }
   }
 
   // method for inserting a transaction

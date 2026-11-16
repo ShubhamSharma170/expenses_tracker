@@ -258,15 +258,20 @@ class _HomeScreenState extends State<HomeScreen> {
                     return Column(
                       children: [
                         Dismissible(
-                          key: Key(item.date.toString()),
+                          // Use the unique Firestore document ID as the widget key
+                          key: ValueKey(
+                            item.id.isNotEmpty
+                                ? item.id
+                                : '${item.title}_${item.date.microsecondsSinceEpoch}',
+                          ),
                           background: Container(
                             alignment: Alignment.centerRight,
                             decoration: BoxDecoration(
                               color: AppColors.red,
                               borderRadius: BorderRadius.circular(10),
                             ),
-                            padding: EdgeInsets.only(right: 20),
-                            child: Icon(
+                            padding: const EdgeInsets.only(right: 20),
+                            child: const Icon(
                               Icons.delete_outline_outlined,
                               color: AppColors.white,
                             ),
@@ -275,26 +280,29 @@ class _HomeScreenState extends State<HomeScreen> {
                           onDismissed: (direction) {
                             final deletedItem = transactions[index];
                             final deletedIndex = index;
+
+                            // Delete from local state and Firestore
                             context
                                 .read<TransactionProvider>()
-                                .deleteTransaction(index);
+                                .deleteTransaction(deletedIndex);
+
                             ScaffoldMessenger.of(context).clearSnackBars();
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text(
-                                  "${item.title} deleted",
-                                  style: TextStyle(color: AppColors.white),
+                                  "${deletedItem.title} deleted",
+                                  style: const TextStyle(
+                                    color: AppColors.white,
+                                  ),
                                 ),
-                                duration: Duration(seconds: 4),
+                                duration: const Duration(seconds: 4),
                                 action: SnackBarAction(
                                   label: "Undo",
                                   onPressed: () {
+                                    // Re-save the deleted transaction back to Firestore
                                     context
                                         .read<TransactionProvider>()
-                                        .insertTransaction(
-                                          deletedIndex,
-                                          deletedItem,
-                                        );
+                                        .addTransactionToFirebase(deletedItem);
                                   },
                                 ),
                               ),
@@ -495,178 +503,404 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildAddTransactionSheet() {
     double mq = MediaQuery.of(context).size.width;
-    return Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
-      ),
-      child: SingleChildScrollView(
-        child: Container(
-          width: double.infinity,
-          padding: EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: AppColors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // 1. Drag Handle
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              const SizedBox(height: 20),
 
-              // 2. Heading Text
-              const Text(
-                "Add Transaction",
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+    return StatefulBuilder(
+      builder: (BuildContext sheetContext, StateSetter setSheetState) {
+        final bool isIncome = _selectedType == TransactionType.income;
+        final bool isExpense = _selectedType == TransactionType.expense;
+
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
+          ),
+          child: SingleChildScrollView(
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(20),
+              decoration: const BoxDecoration(
+                color: AppColors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
               ),
-              const SizedBox(height: 30),
-              // toggle buttons for income and expense
-              SizedBox(
-                // color: Colors.red,
-                width: mq * 0.6,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          _selectedType = TransactionType.income;
-                        });
-                      },
-                      child: Container(
-                        padding: EdgeInsets.symmetric(
-                          vertical: 8,
-                          horizontal: 15,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.incomeGreen,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Text(
-                          "Income",
-                          style: TextStyle(
-                            fontSize: 18,
-                            color: AppColors.white,
-                          ),
-                        ),
-                      ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Drag handle indicator at the top of the bottom sheet
+                  Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade300,
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                    SizedBox(width: 10),
-                    GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          _selectedType = TransactionType.expense;
-                        });
-                      },
-                      child: Container(
-                        padding: EdgeInsets.symmetric(
-                          vertical: 8,
-                          horizontal: 15,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.red,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Text(
-                          "Expense",
-                          style: TextStyle(
-                            fontSize: 18,
-                            color: AppColors.white,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(height: 20),
-              Container(
-                decoration: BoxDecoration(
-                  color: AppColors.white,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: AppColors.grey, width: 1),
-                ),
-                padding: EdgeInsets.all(15),
-                child: Column(
-                  children: [
-                    TextField(
-                      controller: _titleController,
-                      decoration: InputDecoration(labelText: "Title"),
-                    ),
-                    SizedBox(height: 10),
-                    TextField(
-                      controller: _amountController,
-                      decoration: InputDecoration(labelText: "Amount"),
-                      keyboardType: TextInputType.number,
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(height: 20),
-              DropdownButtonFormField(
-                value: _selectedCategory,
-                decoration: InputDecoration(
-                  labelText: "Category",
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide(color: AppColors.grey),
                   ),
-                ),
-                icon: Icon(Icons.keyboard_arrow_down_rounded),
-                items: CategoryHelper.categories.map((category) {
-                  return DropdownMenuItem<String>(
-                    value: category.name,
+                  const SizedBox(height: 20),
+
+                  // Modal heading title
+                  const Text(
+                    "Add Transaction",
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 30),
+
+                  // Segmented toggle buttons for Income and Expense
+                  SizedBox(
+                    width: mq * 0.65,
                     child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(category.icon, color: AppColors.textDark),
-                        SizedBox(width: 10),
-                        Text(category.name),
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () {
+                              // Rebuild only the bottom sheet when Income is selected
+                              setSheetState(() {
+                                _selectedType = TransactionType.income;
+                              });
+                            },
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              alignment: Alignment.center,
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 10,
+                                horizontal: 15,
+                              ),
+                              decoration: BoxDecoration(
+                                color: isIncome
+                                    ? AppColors.incomeGreen
+                                    : AppColors.background,
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                  color: isIncome
+                                      ? AppColors.incomeGreen
+                                      : AppColors.grey,
+                                ),
+                              ),
+                              child: Text(
+                                "Income",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: isIncome
+                                      ? AppColors.white
+                                      : AppColors.textGrey,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () {
+                              // Rebuild only the bottom sheet when Expense is selected
+                              setSheetState(() {
+                                _selectedType = TransactionType.expense;
+                              });
+                            },
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              alignment: Alignment.center,
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 10,
+                                horizontal: 15,
+                              ),
+                              decoration: BoxDecoration(
+                                color: isExpense
+                                    ? AppColors.red
+                                    : AppColors.background,
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                  color: isExpense
+                                      ? AppColors.red
+                                      : AppColors.grey,
+                                ),
+                              ),
+                              child: Text(
+                                "Expense",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: isExpense
+                                      ? AppColors.white
+                                      : AppColors.textGrey,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
                       ],
                     ),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  if (value != null) {
-                    setState(() {
-                      _selectedCategory = value;
-                      _selectedIcon = CategoryHelper.getIcon(value);
-                    });
-                  }
-                },
-              ),
-              SizedBox(height: 20),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.cardGradientStart,
-                  elevation: 0,
-                  padding: EdgeInsets.symmetric(vertical: 15, horizontal: 30),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
                   ),
-                ),
-                onPressed: () {
-                  addTransaction();
-                },
-                child: const Text(
-                  "Save Transaction",
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                  const SizedBox(height: 20),
+
+                  // Title and Amount input fields container
+                  Container(
+                    decoration: BoxDecoration(
+                      color: AppColors.white,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: AppColors.grey, width: 1),
+                    ),
+                    padding: const EdgeInsets.all(15),
+                    child: Column(
+                      children: [
+                        TextField(
+                          controller: _titleController,
+                          decoration: const InputDecoration(labelText: "Title"),
+                        ),
+                        const SizedBox(height: 10),
+                        TextField(
+                          controller: _amountController,
+                          decoration: const InputDecoration(
+                            labelText: "Amount",
+                          ),
+                          keyboardType: TextInputType.number,
+                        ),
+                      ],
+                    ),
                   ),
-                ),
+                  const SizedBox(height: 20),
+
+                  // Category dropdown selector
+                  DropdownButtonFormField<String>(
+                    value: _selectedCategory,
+                    decoration: InputDecoration(
+                      labelText: "Category",
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(color: AppColors.grey),
+                      ),
+                    ),
+                    icon: const Icon(Icons.keyboard_arrow_down_rounded),
+                    items: CategoryHelper.categories.map((category) {
+                      return DropdownMenuItem<String>(
+                        value: category.name,
+                        child: Row(
+                          children: [
+                            Icon(category.icon, color: AppColors.textDark),
+                            const SizedBox(width: 10),
+                            Text(category.name),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      if (value != null) {
+                        // Update selected category and icon inside the bottom sheet
+                        setSheetState(() {
+                          _selectedCategory = value;
+                          _selectedIcon = CategoryHelper.getIcon(value);
+                        });
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Submit button to save the transaction
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.cardGradientStart,
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 15,
+                        horizontal: 30,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    onPressed: () {
+                      addTransaction();
+                    },
+                    child: const Text(
+                      "Save Transaction",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
+  // Widget _buildAddTransactionSheet() {
+  //   double mq = MediaQuery.of(context).size.width;
+  //   return Padding(
+  //     padding: EdgeInsets.only(
+  //       bottom: MediaQuery.of(context).viewInsets.bottom,
+  //     ),
+  //     child: SingleChildScrollView(
+  //       child: Container(
+  //         width: double.infinity,
+  //         padding: EdgeInsets.all(20),
+  //         decoration: BoxDecoration(
+  //           color: AppColors.white,
+  //           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+  //         ),
+  //         child: Column(
+  //           mainAxisSize: MainAxisSize.min,
+  //           children: [
+  //             // 1. Drag Handle
+  //             Container(
+  //               width: 40,
+  //               height: 4,
+  //               decoration: BoxDecoration(
+  //                 color: Colors.grey.shade300,
+  //                 borderRadius: BorderRadius.circular(10),
+  //               ),
+  //             ),
+  //             const SizedBox(height: 20),
+
+  //             // 2. Heading Text
+  //             const Text(
+  //               "Add Transaction",
+  //               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+  //             ),
+  //             const SizedBox(height: 30),
+  //             // toggle buttons for income and expense
+  //             SizedBox(
+  //               // color: Colors.red,
+  //               width: mq * 0.6,
+  //               child: Row(
+  //                 mainAxisAlignment: MainAxisAlignment.center,
+  //                 children: [
+  //                   GestureDetector(
+  //                     onTap: () {
+  //                       setState(() {
+  //                         _selectedType = TransactionType.income;
+  //                       });
+  //                     },
+  //                     child: Container(
+  //                       padding: EdgeInsets.symmetric(
+  //                         vertical: 8,
+  //                         horizontal: 15,
+  //                       ),
+  //                       decoration: BoxDecoration(
+  //                         color: AppColors.incomeGreen,
+  //                         borderRadius: BorderRadius.circular(10),
+  //                       ),
+  //                       child: Text(
+  //                         "Income",
+  //                         style: TextStyle(
+  //                           fontSize: 18,
+  //                           color: AppColors.white,
+  //                         ),
+  //                       ),
+  //                     ),
+  //                   ),
+  //                   SizedBox(width: 10),
+  //                   GestureDetector(
+  //                     onTap: () {
+  //                       setState(() {
+  //                         _selectedType = TransactionType.expense;
+  //                       });
+  //                     },
+  //                     child: Container(
+  //                       padding: EdgeInsets.symmetric(
+  //                         vertical: 8,
+  //                         horizontal: 15,
+  //                       ),
+  //                       decoration: BoxDecoration(
+  //                         color: AppColors.red,
+  //                         borderRadius: BorderRadius.circular(10),
+  //                       ),
+  //                       child: Text(
+  //                         "Expense",
+  //                         style: TextStyle(
+  //                           fontSize: 18,
+  //                           color: AppColors.white,
+  //                         ),
+  //                       ),
+  //                     ),
+  //                   ),
+  //                 ],
+  //               ),
+  //             ),
+  //             SizedBox(height: 20),
+  //             Container(
+  //               decoration: BoxDecoration(
+  //                 color: AppColors.white,
+  //                 borderRadius: BorderRadius.circular(10),
+  //                 border: Border.all(color: AppColors.grey, width: 1),
+  //               ),
+  //               padding: EdgeInsets.all(15),
+  //               child: Column(
+  //                 children: [
+  //                   TextField(
+  //                     controller: _titleController,
+  //                     decoration: InputDecoration(labelText: "Title"),
+  //                   ),
+  //                   SizedBox(height: 10),
+  //                   TextField(
+  //                     controller: _amountController,
+  //                     decoration: InputDecoration(labelText: "Amount"),
+  //                     keyboardType: TextInputType.number,
+  //                   ),
+  //                 ],
+  //               ),
+  //             ),
+  //             SizedBox(height: 20),
+  //             DropdownButtonFormField(
+  //               value: _selectedCategory,
+  //               decoration: InputDecoration(
+  //                 labelText: "Category",
+  //                 border: OutlineInputBorder(
+  //                   borderRadius: BorderRadius.circular(10),
+  //                   borderSide: BorderSide(color: AppColors.grey),
+  //                 ),
+  //               ),
+  //               icon: Icon(Icons.keyboard_arrow_down_rounded),
+  //               items: CategoryHelper.categories.map((category) {
+  //                 return DropdownMenuItem<String>(
+  //                   value: category.name,
+  //                   child: Row(
+  //                     children: [
+  //                       Icon(category.icon, color: AppColors.textDark),
+  //                       SizedBox(width: 10),
+  //                       Text(category.name),
+  //                     ],
+  //                   ),
+  //                 );
+  //               }).toList(),
+  //               onChanged: (value) {
+  //                 if (value != null) {
+  //                   setState(() {
+  //                     _selectedCategory = value;
+  //                     _selectedIcon = CategoryHelper.getIcon(value);
+  //                   });
+  //                 }
+  //               },
+  //             ),
+  //             SizedBox(height: 20),
+  //             ElevatedButton(
+  //               style: ElevatedButton.styleFrom(
+  //                 backgroundColor: AppColors.cardGradientStart,
+  //                 elevation: 0,
+  //                 padding: EdgeInsets.symmetric(vertical: 15, horizontal: 30),
+  //                 shape: RoundedRectangleBorder(
+  //                   borderRadius: BorderRadius.circular(14),
+  //                 ),
+  //               ),
+  //               onPressed: () {
+  //                 addTransaction();
+  //               },
+  //               child: const Text(
+  //                 "Save Transaction",
+  //                 style: TextStyle(
+  //                   fontSize: 18,
+  //                   fontWeight: FontWeight.bold,
+  //                   color: Colors.white,
+  //                 ),
+  //               ),
+  //             ),
+  //           ],
+  //         ),
+  //       ),
+  //     ),
+  //   );
+  // }
 }

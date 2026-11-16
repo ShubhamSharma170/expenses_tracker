@@ -29,4 +29,13 @@ class FirestoreServices {
           }).toList();
         });
   }
+
+  // Delete a specific transaction document from Firestore by its ID
+  Future<void> deleteTransaction(String id) async {
+    try {
+      await transactionCollection.doc(id).delete();
+    } catch (error) {
+      rethrow;
+    }
+  }
 }
