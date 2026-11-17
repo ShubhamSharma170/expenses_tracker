@@ -1,6 +1,7 @@
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 
 class AuthResult {
   final bool isSuccess;
@@ -14,11 +15,11 @@ class AuthServiceClass {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // Getter for auth state stream & current user
+  // Expose the authentication state stream and current user
   Stream<User?> get authStateChanges => _auth.authStateChanges();
   User? get currentUser => _auth.currentUser;
 
-  // Method for signup
+  // Register a new user and store their profile details in Firestore
   Future<AuthResult> signUpWithEmailAndPassword(
     String email,
     String password,
@@ -29,6 +30,10 @@ class AuthServiceClass {
         email: email.trim(),
         password: password,
       );
+
+      // Save the user's display name in Firebase Auth as well
+      await userCredential.user?.updateDisplayName(name.trim());
+
       await _firestore.collection('users').doc(userCredential.user?.uid).set({
         'uid': userCredential.user?.uid,
         'email': email.trim(),
@@ -49,7 +54,7 @@ class AuthServiceClass {
     }
   }
 
-  // Method for login
+  // Sign in an existing user with email and password
   Future<AuthResult> loginWithEmailAndPassword(
     String email,
     String password,
@@ -73,7 +78,21 @@ class AuthServiceClass {
     }
   }
 
-  // Method for logout
+  // Fetch the user's profile document from Firestore
+  Future<Map<String, dynamic>?> getUserProfile(String uid) async {
+    try {
+      final doc = await _firestore.collection('users').doc(uid).get();
+      if (doc.exists) {
+        return doc.data();
+      }
+      return null;
+    } catch (e) {
+      debugPrint('Error fetching user profile: $e');
+      return null;
+    }
+  }
+
+  // Sign out the currently authenticated user
   Future<void> signOut() async {
     await _auth.signOut();
   }
@@ -84,16 +103,44 @@ class AuthServiceClass {
 // =========================================================================
 class AuthClassProvider extends ChangeNotifier {
   final AuthServiceClass _authService = AuthServiceClass();
+  StreamSubscription<User?>? _authSubscription;
 
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
+  String _userName = '';
+  String get userName => _userName;
+
   User? get currentUser => _authService.currentUser;
   Stream<User?> get authStateChanges => _authService.authStateChanges;
+
+  // Listen to auth changes so the user's name loads automatically on app start or login
+  AuthClassProvider() {
+    _authSubscription = _authService.authStateChanges.listen((User? user) {
+      if (user != null) {
+        loadUserProfile(user.uid);
+      } else {
+        _userName = '';
+        notifyListeners();
+      }
+    });
+  }
 
   void _setLoading(bool value) {
     _isLoading = value;
     notifyListeners();
+  }
+
+  // Load the current user's name from Firestore into provider state
+  Future<void> loadUserProfile(String uid) async {
+    final profileData = await _authService.getUserProfile(uid);
+    if (profileData != null && profileData['name'] != null) {
+      _userName = profileData['name'].toString().trim();
+      notifyListeners();
+    } else if (_authService.currentUser?.displayName != null) {
+      _userName = _authService.currentUser!.displayName!.trim();
+      notifyListeners();
+    }
   }
 
   Future<AuthResult> signUp({
@@ -107,6 +154,9 @@ class AuthClassProvider extends ChangeNotifier {
       password,
       name,
     );
+    if (result.isSuccess) {
+      _userName = name.trim();
+    }
     _setLoading(false);
     return result;
   }
@@ -120,92 +170,22 @@ class AuthClassProvider extends ChangeNotifier {
       email,
       password,
     );
+    if (result.isSuccess && _authService.currentUser != null) {
+      await loadUserProfile(_authService.currentUser!.uid);
+    }
     _setLoading(false);
     return result;
   }
 
   Future<void> logout() async {
     await _authService.signOut();
+    _userName = '';
     notifyListeners();
   }
+
+  @override
+  void dispose() {
+    _authSubscription?.cancel();
+    super.dispose();
+  }
 }
-
-// // ignore_for_file: unused_local_variable
-
-// import 'package:cloud_firestore/cloud_firestore.dart';
-// import 'package:firebase_auth/firebase_auth.dart';
-
-// class AuthResult {
-//   final bool isSuccess;
-//   final String? errorMessage;
-
-//   AuthResult.success() : isSuccess = true, errorMessage = null;
-//   AuthResult.failure(this.errorMessage) : isSuccess = false;
-// }
-
-// class AuthServiceClass {
-//   final FirebaseAuth _auth = FirebaseAuth.instance;
-//   FirebaseFirestore firestore = FirebaseFirestore.instance;
-
-//   // method for signup
-//   Future<AuthResult> signUpWithEmailAndPassword(
-//     String email,
-//     String password,
-//     String name,
-//   ) async {
-//     UserCredential? userCredential;
-//     try {
-//       final userCredential = await _auth.createUserWithEmailAndPassword(
-//         email: email.trim(),
-//         password: password,
-//       );
-//       await firestore.collection('users').doc(userCredential.user?.uid).set({
-//         'uid': userCredential.user?.uid,
-//         'email': email,
-//         'name': name,
-//         'createdAt': FieldValue.serverTimestamp(),
-//       });
-//       return AuthResult.success();
-//     } on FirebaseAuthException catch (e) {
-//       print(e.message);
-//       return AuthResult.failure(
-//         e.message ?? "An unknown error occurred. Please try again later.",
-//       );
-//     } catch (e) {
-//       print(e);
-//       return AuthResult.failure(
-//         "An unknown error occurred. Please try again later.",
-//       );
-//     }
-//   }
-
-//   // method for login
-//   Future<AuthResult> loginWithEmailAndPassword(
-//     String email,
-//     String password,
-//   ) async {
-//     UserCredential? userCredential;
-//     try {
-//       final userCredential = await _auth.signInWithEmailAndPassword(
-//         email: email.trim(),
-//         password: password,
-//       );
-//       return AuthResult.success();
-//     } on FirebaseAuthException catch (e) {
-//       print(e.message);
-//       return AuthResult.failure(
-//         e.message ?? "An unknown error occurred. Please try again later.",
-//       );
-//     } catch (e) {
-//       print(e);
-//       return AuthResult.failure(
-//         "An unknown error occurred. Please try again later.",
-//       );
-//     }
-//   }
-
-//   // method for logout
-//   Future<void> signOut() async {
-//     await _auth.signOut();
-//   }
-// }

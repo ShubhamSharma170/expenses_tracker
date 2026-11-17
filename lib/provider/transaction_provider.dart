@@ -4,11 +4,14 @@ import 'package:exppence_tracker/services/firebase_services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+enum TransactionFilter { all, income, expense } // [NEW]
+
 class TransactionProvider with ChangeNotifier {
   final FirestoreServices _firestoreServices = FirestoreServices();
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   List<TransactionModel> _transactions = [];
+  TransactionFilter _selectedFilter = TransactionFilter.all; // [NEW]
   StreamSubscription<List<TransactionModel>>? _transactionSubscription;
   StreamSubscription<User?>? _authSubscription;
 
@@ -21,13 +24,47 @@ class TransactionProvider with ChangeNotifier {
         // Clear previous user's data and stop listening on logout
         _transactionSubscription?.cancel();
         _transactions = [];
+        _selectedFilter = TransactionFilter.all; // [NEW]
         notifyListeners();
       }
     });
   }
 
-  // Return an unmodifiable list to prevent accidental external mutations
+  // Return an unmodifiable list of all transactions
   List<TransactionModel> get transactions => List.unmodifiable(_transactions);
+
+  TransactionFilter get selectedFilter => _selectedFilter; // [NEW]
+
+  // Return transactions filtered by the active filter option // [NEW]
+  List<TransactionModel> get filteredTransactions {
+    switch (_selectedFilter) {
+      case TransactionFilter.income: 
+        return List.unmodifiable(
+          _transactions.where(
+            (item) => item.type == TransactionType.income,
+          ), // [NEW]
+        ); // [NEW]
+      case TransactionFilter.expense: // [NEW]
+        return List.unmodifiable(
+          // [NEW]
+          _transactions.where(
+            (item) => item.type == TransactionType.expense,
+          ), // [NEW]
+        ); // [NEW]
+      case TransactionFilter.all: // [NEW]
+        return List.unmodifiable(_transactions); // [NEW]
+    } 
+  } 
+
+  // Update the active transaction filter and rebuild listeners // [NEW]
+  void setFilter(TransactionFilter filter) {
+    // [NEW]
+    if (_selectedFilter != filter) {
+      // [NEW]
+      _selectedFilter = filter; // [NEW]
+      notifyListeners(); // [NEW]
+    } // [NEW]
+  } // [NEW]
 
   // Calculate total income from the current user's transactions
   double get totalIncome {
@@ -62,8 +99,8 @@ class TransactionProvider with ChangeNotifier {
     final uid = _auth.currentUser?.uid;
     if (uid == null) return;
 
-    final removedTx = _transactions[index];
-    _transactions.removeAt(index);
+    final removedTx = filteredTransactions[index]; // [UPDATED]
+    _transactions.removeWhere((tx) => tx.id == removedTx.id); // [UPDATED]
     notifyListeners();
 
     if (removedTx.id.isNotEmpty) {
@@ -80,8 +117,9 @@ class TransactionProvider with ChangeNotifier {
   // Subscribe to real-time transaction updates for the given user UID
   void listenToTransactions(String uid) {
     _transactionSubscription?.cancel();
-    _transactionSubscription =
-        _firestoreServices.getTransactions(uid).listen((updatedList) {
+    _transactionSubscription = _firestoreServices.getTransactions(uid).listen((
+      updatedList,
+    ) {
       _transactions = updatedList;
       notifyListeners();
     });

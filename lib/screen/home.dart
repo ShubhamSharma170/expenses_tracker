@@ -22,9 +22,14 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     var mq = MediaQuery.of(context).size.width;
+    final authProvider = context.watch<AuthClassProvider>();
+    final displayName = authProvider.userName.isNotEmpty
+        ? authProvider.userName
+        : "User";
 
     final txProvider = context.watch<TransactionProvider>();
-    final transactions = txProvider.transactions;
+    final transactions = txProvider
+        .filteredTransactions; // Use filtered transactions based on the selected filter
     return Scaffold(
       body: SafeArea(
         child: Container(
@@ -36,28 +41,34 @@ class _HomeScreenState extends State<HomeScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 27,
-                        backgroundColor: AppColors.grey,
-                        child: Icon(
-                          Icons.person,
-                          // size: 30,
-                          color: Colors.black,
+                  Expanded(
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 18,
+                          backgroundColor: AppColors.grey,
+                          child: Icon(
+                            Icons.person,
+                            // size: 30,
+                            color: Colors.black,
+                          ),
                         ),
-                      ),
-                      SizedBox(width: 10),
-                      Text("Hello,", style: TextStyle(fontSize: 22)),
-                      SizedBox(width: 5),
-                      Text(
-                        "Shubham",
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
+                        SizedBox(width: 10),
+                        Text("Hello,", style: TextStyle(fontSize: 20)),
+                        SizedBox(width: 5),
+                        Flexible(
+                          child: Text(
+                            displayName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                   SizedBox(width: 10),
                   IconButton(
@@ -73,7 +84,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     onPressed: () async {
                       await context.read<AuthClassProvider>().logout();
                     },
-                    icon: Icon(Icons.notifications_none_outlined, size: 25),
+                    icon: Icon(Icons.notifications_none_outlined, size: 22),
                   ),
                 ],
               ),
@@ -219,32 +230,82 @@ class _HomeScreenState extends State<HomeScreen> {
 
               SizedBox(height: 25),
               // Transaction List
+              // Transaction List Header with Filter Menu
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    "Recent Transactions",
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  IconButton(
-                    style: ButtonStyle(
-                      backgroundColor: WidgetStateProperty.all<Color>(
-                        AppColors.white,
-                      ),
-                      shape: WidgetStateProperty.all<RoundedRectangleBorder>(
-                        RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10.0),
-                          side: BorderSide(color: AppColors.grey),
+                  Row(
+                    children: [
+                      const Text(
+                        "Recent Transactions",
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                    ),
-                    onPressed: () {},
-                    icon: Icon(
-                      Icons.filter_alt_rounded,
-                      size: 25,
-                      color: AppColors.textDark,
-                    ),
+                      if (txProvider.selectedFilter !=
+                          TransactionFilter.all) ...[
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.cardGradientStart.withValues(
+                              alpha: 0.12,
+                            ),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            txProvider.selectedFilter.name.toUpperCase(),
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.cardGradientStart,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
+                  PopupMenuButton<TransactionFilter>(
+                    // [UPDATED]
+                    initialValue: txProvider.selectedFilter,
+                    onSelected: (TransactionFilter filter) {
+                      context.read<TransactionProvider>().setFilter(filter);
+                    },
+                    itemBuilder: (BuildContext context) => [
+                      const PopupMenuItem(
+                        value: TransactionFilter.all,
+                        child: Text("All Transactions"),
+                      ),
+                      const PopupMenuItem(
+                        value: TransactionFilter.income,
+                        child: Text("Income Only"),
+                      ),
+                      const PopupMenuItem(
+                        value: TransactionFilter.expense,
+                        child: Text("Expense Only"),
+                      ),
+                    ],
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppColors.white,
+                        borderRadius: BorderRadius.circular(10.0),
+                        border: Border.all(color: AppColors.grey),
+                      ),
+                      child: Icon(
+                        Icons.filter_alt_rounded,
+                        size: 25,
+                        color:
+                            txProvider.selectedFilter == TransactionFilter.all
+                            ? AppColors.textDark
+                            : AppColors.cardGradientStart,
+                      ),
+                    ),
+                  ), // [UPDATED]
                 ],
               ),
               SizedBox(height: 20),
@@ -727,180 +788,4 @@ class _HomeScreenState extends State<HomeScreen> {
       },
     );
   }
-  // Widget _buildAddTransactionSheet() {
-  //   double mq = MediaQuery.of(context).size.width;
-  //   return Padding(
-  //     padding: EdgeInsets.only(
-  //       bottom: MediaQuery.of(context).viewInsets.bottom,
-  //     ),
-  //     child: SingleChildScrollView(
-  //       child: Container(
-  //         width: double.infinity,
-  //         padding: EdgeInsets.all(20),
-  //         decoration: BoxDecoration(
-  //           color: AppColors.white,
-  //           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-  //         ),
-  //         child: Column(
-  //           mainAxisSize: MainAxisSize.min,
-  //           children: [
-  //             // 1. Drag Handle
-  //             Container(
-  //               width: 40,
-  //               height: 4,
-  //               decoration: BoxDecoration(
-  //                 color: Colors.grey.shade300,
-  //                 borderRadius: BorderRadius.circular(10),
-  //               ),
-  //             ),
-  //             const SizedBox(height: 20),
-
-  //             // 2. Heading Text
-  //             const Text(
-  //               "Add Transaction",
-  //               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-  //             ),
-  //             const SizedBox(height: 30),
-  //             // toggle buttons for income and expense
-  //             SizedBox(
-  //               // color: Colors.red,
-  //               width: mq * 0.6,
-  //               child: Row(
-  //                 mainAxisAlignment: MainAxisAlignment.center,
-  //                 children: [
-  //                   GestureDetector(
-  //                     onTap: () {
-  //                       setState(() {
-  //                         _selectedType = TransactionType.income;
-  //                       });
-  //                     },
-  //                     child: Container(
-  //                       padding: EdgeInsets.symmetric(
-  //                         vertical: 8,
-  //                         horizontal: 15,
-  //                       ),
-  //                       decoration: BoxDecoration(
-  //                         color: AppColors.incomeGreen,
-  //                         borderRadius: BorderRadius.circular(10),
-  //                       ),
-  //                       child: Text(
-  //                         "Income",
-  //                         style: TextStyle(
-  //                           fontSize: 18,
-  //                           color: AppColors.white,
-  //                         ),
-  //                       ),
-  //                     ),
-  //                   ),
-  //                   SizedBox(width: 10),
-  //                   GestureDetector(
-  //                     onTap: () {
-  //                       setState(() {
-  //                         _selectedType = TransactionType.expense;
-  //                       });
-  //                     },
-  //                     child: Container(
-  //                       padding: EdgeInsets.symmetric(
-  //                         vertical: 8,
-  //                         horizontal: 15,
-  //                       ),
-  //                       decoration: BoxDecoration(
-  //                         color: AppColors.red,
-  //                         borderRadius: BorderRadius.circular(10),
-  //                       ),
-  //                       child: Text(
-  //                         "Expense",
-  //                         style: TextStyle(
-  //                           fontSize: 18,
-  //                           color: AppColors.white,
-  //                         ),
-  //                       ),
-  //                     ),
-  //                   ),
-  //                 ],
-  //               ),
-  //             ),
-  //             SizedBox(height: 20),
-  //             Container(
-  //               decoration: BoxDecoration(
-  //                 color: AppColors.white,
-  //                 borderRadius: BorderRadius.circular(10),
-  //                 border: Border.all(color: AppColors.grey, width: 1),
-  //               ),
-  //               padding: EdgeInsets.all(15),
-  //               child: Column(
-  //                 children: [
-  //                   TextField(
-  //                     controller: _titleController,
-  //                     decoration: InputDecoration(labelText: "Title"),
-  //                   ),
-  //                   SizedBox(height: 10),
-  //                   TextField(
-  //                     controller: _amountController,
-  //                     decoration: InputDecoration(labelText: "Amount"),
-  //                     keyboardType: TextInputType.number,
-  //                   ),
-  //                 ],
-  //               ),
-  //             ),
-  //             SizedBox(height: 20),
-  //             DropdownButtonFormField(
-  //               value: _selectedCategory,
-  //               decoration: InputDecoration(
-  //                 labelText: "Category",
-  //                 border: OutlineInputBorder(
-  //                   borderRadius: BorderRadius.circular(10),
-  //                   borderSide: BorderSide(color: AppColors.grey),
-  //                 ),
-  //               ),
-  //               icon: Icon(Icons.keyboard_arrow_down_rounded),
-  //               items: CategoryHelper.categories.map((category) {
-  //                 return DropdownMenuItem<String>(
-  //                   value: category.name,
-  //                   child: Row(
-  //                     children: [
-  //                       Icon(category.icon, color: AppColors.textDark),
-  //                       SizedBox(width: 10),
-  //                       Text(category.name),
-  //                     ],
-  //                   ),
-  //                 );
-  //               }).toList(),
-  //               onChanged: (value) {
-  //                 if (value != null) {
-  //                   setState(() {
-  //                     _selectedCategory = value;
-  //                     _selectedIcon = CategoryHelper.getIcon(value);
-  //                   });
-  //                 }
-  //               },
-  //             ),
-  //             SizedBox(height: 20),
-  //             ElevatedButton(
-  //               style: ElevatedButton.styleFrom(
-  //                 backgroundColor: AppColors.cardGradientStart,
-  //                 elevation: 0,
-  //                 padding: EdgeInsets.symmetric(vertical: 15, horizontal: 30),
-  //                 shape: RoundedRectangleBorder(
-  //                   borderRadius: BorderRadius.circular(14),
-  //                 ),
-  //               ),
-  //               onPressed: () {
-  //                 addTransaction();
-  //               },
-  //               child: const Text(
-  //                 "Save Transaction",
-  //                 style: TextStyle(
-  //                   fontSize: 18,
-  //                   fontWeight: FontWeight.bold,
-  //                   color: Colors.white,
-  //                 ),
-  //               ),
-  //             ),
-  //           ],
-  //         ),
-  //       ),
-  //     ),
-  //   );
-  // }
 }
