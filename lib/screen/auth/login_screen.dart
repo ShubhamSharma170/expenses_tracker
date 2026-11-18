@@ -53,7 +53,6 @@ class _LoginScreenState extends State<LoginScreen> {
             backgroundColor: Colors.green,
           ),
         );
-        // TODO: Navigate to HomeScreen if not using an AuthWrapper stream
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

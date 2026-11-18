@@ -26,4 +26,12 @@ class AppColors {
   static const Color background = Color(0xFFF8F9FD);
   static const Color textDark = Color(0xFF1E293B);
   static const Color textGrey = Color(0xFF94A3B8);
+
+  // Category Colors
+  static const Color categoryFood = Color(0xFFFF7043);
+  static const Color categoryTransport = Color(0xFF42A5F5);
+  static const Color categoryEntertainment = Color(0xFFAB47BC);
+  static const Color categoryBills = Color(0xFFEF5350);
+  static const Color categoryClothes = Color(0xFF26A69A);
+  static const Color categoryOther = Color(0xFF78909C);
 }

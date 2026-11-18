@@ -4,14 +4,14 @@ import 'package:exppence_tracker/services/firebase_services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-enum TransactionFilter { all, income, expense }  
+enum TransactionFilter { all, income, expense }
 
 class TransactionProvider with ChangeNotifier {
   final FirestoreServices _firestoreServices = FirestoreServices();
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   List<TransactionModel> _transactions = [];
-  TransactionFilter _selectedFilter = TransactionFilter.all;  
+  TransactionFilter _selectedFilter = TransactionFilter.all;
   StreamSubscription<List<TransactionModel>>? _transactionSubscription;
   StreamSubscription<User?>? _authSubscription;
 
@@ -24,7 +24,7 @@ class TransactionProvider with ChangeNotifier {
         // Clear previous user's data and stop listening on logout
         _transactionSubscription?.cancel();
         _transactions = [];
-        _selectedFilter = TransactionFilter.all;  
+        _selectedFilter = TransactionFilter.all;
         notifyListeners();
       }
     });
@@ -33,38 +33,31 @@ class TransactionProvider with ChangeNotifier {
   // Return an unmodifiable list of all transactions
   List<TransactionModel> get transactions => List.unmodifiable(_transactions);
 
-  TransactionFilter get selectedFilter => _selectedFilter;  
+  TransactionFilter get selectedFilter => _selectedFilter;
 
-  // Return transactions filtered by the active filter option  
+  // Return transactions filtered by the active filter option
   List<TransactionModel> get filteredTransactions {
     switch (_selectedFilter) {
-      case TransactionFilter.income: 
+      case TransactionFilter.income:
         return List.unmodifiable(
-          _transactions.where(
-            (item) => item.type == TransactionType.income,
-          ),  
-        );  
-      case TransactionFilter.expense:  
+          _transactions.where((item) => item.type == TransactionType.income),
+        );
+      case TransactionFilter.expense:
         return List.unmodifiable(
-           
-          _transactions.where(
-            (item) => item.type == TransactionType.expense,
-          ),  
-        );  
-      case TransactionFilter.all:  
-        return List.unmodifiable(_transactions);  
-    } 
-  } 
+          _transactions.where((item) => item.type == TransactionType.expense),
+        );
+      case TransactionFilter.all:
+        return List.unmodifiable(_transactions);
+    }
+  }
 
-  // Update the active transaction filter and rebuild listeners  
+  // Update the active transaction filter and rebuild listeners
   void setFilter(TransactionFilter filter) {
-     
     if (_selectedFilter != filter) {
-       
-      _selectedFilter = filter;  
-      notifyListeners();  
-    }  
-  }  
+      _selectedFilter = filter;
+      notifyListeners();
+    }
+  }
 
   // Calculate total income from the current user's transactions
   double get totalIncome {
@@ -83,6 +76,26 @@ class TransactionProvider with ChangeNotifier {
   // Calculate net balance by subtracting total expenses from total income
   double get totalBalance {
     return totalIncome - totalExpenses;
+  }
+
+  // Group and sort category totals in descending order for the given transaction type
+  Map<String, double> getCategoryBreakdown(TransactionType type) {
+    final Map<String, double> totals = {};
+
+    for (final tx in _transactions) {
+      if (tx.type == type) {
+        final categoryName = tx.category.trim().isEmpty
+            ? 'Other'
+            : tx.category.trim();
+        totals[categoryName] = (totals[categoryName] ?? 0.0) + tx.amount;
+      }
+    }
+
+    // Sort entries from highest amount to lowest amount
+    final sortedEntries = totals.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+
+    return Map.fromEntries(sortedEntries);
   }
 
   // Save a new transaction under the currently signed-in user's UID
