@@ -4,14 +4,14 @@ import 'package:exppence_tracker/services/firebase_services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-enum TransactionFilter { all, income, expense } // [NEW]
+enum TransactionFilter { all, income, expense }  
 
 class TransactionProvider with ChangeNotifier {
   final FirestoreServices _firestoreServices = FirestoreServices();
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   List<TransactionModel> _transactions = [];
-  TransactionFilter _selectedFilter = TransactionFilter.all; // [NEW]
+  TransactionFilter _selectedFilter = TransactionFilter.all;  
   StreamSubscription<List<TransactionModel>>? _transactionSubscription;
   StreamSubscription<User?>? _authSubscription;
 
@@ -24,7 +24,7 @@ class TransactionProvider with ChangeNotifier {
         // Clear previous user's data and stop listening on logout
         _transactionSubscription?.cancel();
         _transactions = [];
-        _selectedFilter = TransactionFilter.all; // [NEW]
+        _selectedFilter = TransactionFilter.all;  
         notifyListeners();
       }
     });
@@ -33,38 +33,38 @@ class TransactionProvider with ChangeNotifier {
   // Return an unmodifiable list of all transactions
   List<TransactionModel> get transactions => List.unmodifiable(_transactions);
 
-  TransactionFilter get selectedFilter => _selectedFilter; // [NEW]
+  TransactionFilter get selectedFilter => _selectedFilter;  
 
-  // Return transactions filtered by the active filter option // [NEW]
+  // Return transactions filtered by the active filter option  
   List<TransactionModel> get filteredTransactions {
     switch (_selectedFilter) {
       case TransactionFilter.income: 
         return List.unmodifiable(
           _transactions.where(
             (item) => item.type == TransactionType.income,
-          ), // [NEW]
-        ); // [NEW]
-      case TransactionFilter.expense: // [NEW]
+          ),  
+        );  
+      case TransactionFilter.expense:  
         return List.unmodifiable(
-          // [NEW]
+           
           _transactions.where(
             (item) => item.type == TransactionType.expense,
-          ), // [NEW]
-        ); // [NEW]
-      case TransactionFilter.all: // [NEW]
-        return List.unmodifiable(_transactions); // [NEW]
+          ),  
+        );  
+      case TransactionFilter.all:  
+        return List.unmodifiable(_transactions);  
     } 
   } 
 
-  // Update the active transaction filter and rebuild listeners // [NEW]
+  // Update the active transaction filter and rebuild listeners  
   void setFilter(TransactionFilter filter) {
-    // [NEW]
+     
     if (_selectedFilter != filter) {
-      // [NEW]
-      _selectedFilter = filter; // [NEW]
-      notifyListeners(); // [NEW]
-    } // [NEW]
-  } // [NEW]
+       
+      _selectedFilter = filter;  
+      notifyListeners();  
+    }  
+  }  
 
   // Calculate total income from the current user's transactions
   double get totalIncome {
